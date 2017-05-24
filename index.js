@@ -3,6 +3,8 @@
 // hwListOfMessages 
 // https://vk.com/editapp?id=6043692&section=options
 
+
+
 const express = require('express');
 const app = express();
 
@@ -13,8 +15,13 @@ const querystring = require('querystring');
 
 
 // настройки, полученные при регистрации приложения
+// ID приложения
 var appId = '6043692';
-var safeKey = 'WjqsadfIolhKYd9zLz4g';
+
+// Защищенный ключ доступа
+var safeKey = 'WjqsadfIolhKYd9zLz4g';  
+
+//Сервисный ключ доступа
 var serviceAccessKey = '8614e0c68614e0c68614e0c6ad8648d8ea886148614e0c6df371136f6d5d4995408feec';
 
 // настройки для сайта и порта
@@ -97,6 +104,7 @@ function showUserInfo(res){
       } 
     ))
   })
+
   // По полученному ключу пытаемся получить ИД первой из групп пользователя
   .then(x=>{
     console.log('=== groups ====');        
@@ -105,39 +113,41 @@ function showUserInfo(res){
     return axios.post('https://api.vk.com/method/groups.get?'+query);
   })
   // По полученному ИД группы пытаемся получить список сообщений на стене группы
-    .then(function (response) {
-      if (!response.data.response.count){  
-        throw new Error('Данные не получены. '+response.data.error +' : '+ response.data.error_description);
-      }
-      if (response.data.response.count == 0){ throw new Error("Current user hasn't any groups. "); }
-      groupId = response.data.response.items[0];
-      console.log('=== messages ====');        
-      query = querystring.stringify({owner_id:'-'+groupId, access_token:accessToken, v:'5.64'});  
+  .then(function (response) {
+    if (!response.data.response.count){  
+      throw new Error('Данные не получены. '+response.data.error +' : '+ response.data.error_description);
+    }
+    if (response.data.response.count == 0){ throw new Error("Current user hasn't any groups. "); }
+    groupId = response.data.response.items[0];
+    console.log('=== messages ====');        
+    query = querystring.stringify({owner_id:'-'+groupId, access_token:accessToken, v:'5.64'});  
 
-      console.log('https://api.vk.com/method/wall.get?'+query);
-      return axios.post('https://api.vk.com/method/wall.get?'+query);
-    })
-    // Выводим тексты сообщений на страницу пользователя. И почему в Node нет JSX?!
-    .then(function (response) {
-      resultString = '<html><head><title>MyHomeWork</title></head><body bgcolor="white"><table border="1"><caption>Результаты</caption>'
-      for(let i=0; i<5; i++){
-        if (response.data.response.items[i].text === undefined) break;
-        //TODO разобраться, что пишется во from_id и в owner_id
-        resultString += '<tr><td><a href="https://vk.com/wall-'+groupId+'_'+response.data.response.items[i].id+'">&nbsp;'
-          +(i+1)+'&nbsp;</a></td><td>'+response.data.response.items[i].text+'</td></tr>';
-      }
-      resultString += '</table></body></html>';
+    console.log('https://api.vk.com/method/wall.get?'+query);
+    return axios.post('https://api.vk.com/method/wall.get?'+query);
+  })
+
+  // Выводим тексты сообщений на страницу пользователя. И почему в Node нет JSX?!
+  .then(function (response) {
+    resultString = '<html><head><title>MyHomeWork</title></head><body bgcolor="white"><table border="1"><caption>Результаты</caption>'
+    for(let i=0; i<5; i++){
+      if (response.data.response.items[i].text === undefined) break;
+      //TODO разобраться, что пишется во from_id и в owner_id
+      resultString += '<tr><td><a href="https://vk.com/wall-'+groupId+'_'+response.data.response.items[i].id+'">&nbsp;'
+        +(i+1)+'&nbsp;</a></td><td>'+response.data.response.items[i].text+'</td></tr>';
+    }
+    resultString += '</table></body></html>';
         
-      res.send(resultString);
-    })
-    // Советуем перегрузить страницу, так как, вероятно, устарел временный ключ.
-    // Если не поможет - значит какая-то другая причина, которую программа на отслеживает, 
-    // например API изменилось
-    .catch(function (err) {
-      temporaryKey = '';
-      accessToken = '';
-      console.log('err.message =' + err.message);
-      res.send('Key is expired. Try to reload page to reconnect.');
-     });     
+    res.send(resultString);
+  })
+
+  // Советуем перегрузить страницу, так как, вероятно, устарел временный ключ.
+  // Если не поможет - значит какая-то другая причина, которую программа на отслеживает, 
+  // например API изменилось
+  .catch(function (err) {
+    temporaryKey = '';
+    accessToken = '';
+    console.log('err.message =' + err.message);
+    res.send('Key is expired. Try to reload page to reconnect.');
+   });     
 }
 
