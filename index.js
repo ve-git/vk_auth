@@ -152,7 +152,7 @@ function showUserInfo(res){
     accessToken = '';
     console.log('err.message =' + err.message);
     showButton = true;
-    info = 'Key is expired. Try push button to reconnect.'
+    info = 'Key is expired. Try to push the button to reconnect.'
     res.redirect(urlCallback);
    });     
 }
