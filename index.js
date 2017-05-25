@@ -1,16 +1,11 @@
 "use strict";
-
 // hwListOfMessages 
 // https://vk.com/editapp?id=6043692&section=options
-
-
 
 const express = require('express');
 const app = express();
 
-var axios = require('axios'); 
-
-//const url = require('url');
+const axios = require('axios'); 
 const querystring = require('querystring');
 
 
@@ -28,23 +23,23 @@ var serviceAccessKey = '8614e0c68614e0c68614e0c6ad8648d8ea886148614e0c6df371136f
 let port = '3002';
 let urlCallback = 'http://localhost:'+port;
 
-let temporaryKey = '';      // временный ключ
-let temporaryKeyRequested = false; 
+// прочие переменные программы
+let temporaryKey = '';              // временный ключ
+let temporaryKeyRequested = false;  // признак того, что ожидается получение временного ключа
 
-let accessToken = '';  // ключ (токен) доступа
+let accessToken = '';               // ключ (токен) доступа
 
-let groupId;
-let resultString;
+let groupId;                        // идентификатор группы
+let showButton = true;              // признак того, что нужно показывать кнопку на странице
 
-let showButton = true;
 
-let query;
-let info = '';
-
-let key; // для отладки
+let resultString;                   // строка для хранения html
+let query;                          // строка для параметров url
+let info = '';                      // строка для сообщения, выводимого перед кнопкой
 
 
 app.get('/', function(req, res){
+  // Есди неободимо показать страницу с кнопкой  - показываем
   if (showButton) {
     showButton = false;
     resultString = '<!DOCTYPE html><html><head><title>MyHomeWork</title></head>'+
@@ -52,10 +47,14 @@ app.get('/', function(req, res){
       '</p></form></body></html>';
     res.send(resultString);
   }
-  else if (temporaryKey){                   // Если есть временный ключ - пропускаем этап его получения   
+
+  // Если есть временный ключ - пропускаем этап его получения   
+  else if (temporaryKey){                   
       showUserInfo(res);
   }
-  else if (!temporaryKeyRequested) {  // Если временный ключ не запрошен - запрашиваем
+
+  // Если временный ключ не запрошен - запрашиваем
+  else if (!temporaryKeyRequested) {  
     temporaryKeyRequested = true;  
 
     query = querystring.stringify({
@@ -70,31 +69,31 @@ app.get('/', function(req, res){
     console.log('https://oauth.vk.com/authorize?'+query);
     res.redirect('https://oauth.vk.com/authorize?'+query);
   }
-  else if (req.query.code !== undefined){ // Если временный ключ запрошен и получен - читаем и запоминаем его, и идем дальше
+
+  // Если временный ключ запрошен и получен - читаем и запоминаем его, и идем дальше
+  else if (req.query.code !== undefined){ 
     temporaryKeyRequested = false;
     temporaryKey = req.query.code;
     showUserInfo(res);
   }
-  else{ // Если временный ключ был запрошен, но не получен, сообщаем об этом 
+
+  // Если временный ключ был запрошен, но не получен, сообщаем об этом 
+  else{ 
     temporaryKeyRequested = false;  
     res.send('Не удалось получить временный ключ: ' + res.query[error] + ' ' + res.query[error_description]);  
     // Если открыть страницу и быстро ее обновить - можно получить такое сообщение.
   }
 }).listen(port);
-
 console.log('Server started on port '+ port);
 
-
-
 function showUserInfo(res){
-
   Promise.resolve(null)
+
   // Если ключ доступа получен, используем его, иначе пытаемся получить его
   .then(x=>{
     if (accessToken) {
       return accessToken;
     }    
-
     query = querystring.stringify({
       client_id     : appId, 
       client_secret : safeKey,
@@ -122,6 +121,7 @@ function showUserInfo(res){
     console.log('https://api.vk.com/method/groups.get?'+query);
     return axios.post('https://api.vk.com/method/groups.get?'+query);
   })
+
   // По полученному ИД группы пытаемся получить список сообщений на стене группы
   .then(function (response) {
     if (!response.data.response.count){  
@@ -131,7 +131,6 @@ function showUserInfo(res){
     groupId = response.data.response.items[0];
     console.log('=== messages ====');        
     query = querystring.stringify({owner_id:'-'+groupId, access_token:accessToken, v:'5.64'});  
-
     console.log('https://api.vk.com/method/wall.get?'+query);
     return axios.post('https://api.vk.com/method/wall.get?'+query);
   })
@@ -146,13 +145,11 @@ function showUserInfo(res){
         +(i+1)+'&nbsp;</a></td><td>'+response.data.response.items[i].text+'</td></tr>';
     }
     resultString += '</table></body></html>';
-        
     res.send(resultString);
   })
 
-  // Советуем перегрузить страницу, так как, вероятно, устарел временный ключ.
-  // Если не поможет - значит какая-то другая причина, которую программа на отслеживает, 
-  // например API изменилось
+  // Советуем перезайти, так как, вероятно, устарел временный ключ. Если не поможет - 
+  // значит какая-то другая причина, которую программа на отслеживает, например API изменилось
   .catch(function (err) {
     temporaryKey = '';
     accessToken = '';
