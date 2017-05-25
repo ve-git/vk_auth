@@ -36,13 +36,23 @@ let accessToken = '';  // ключ (токен) доступа
 let groupId;
 let resultString;
 
+let showButton = true;
+
 let query;
+let info = '';
 
 let key; // для отладки
 
 
 app.get('/', function(req, res){
-  if (temporaryKey){                   // Если есть временный ключ - пропускаем этап его получения   
+  if (showButton) {
+    showButton = false;
+    resultString = '<!DOCTYPE html><html><head><title>MyHomeWork</title></head>'+
+      '<body><p>'+info+'<p><form action="'+urlCallback+'" method="get"><p><input type="submit" value ="Click me!">'+
+      '</p></form></body></html>';
+    res.send(resultString);
+  }
+  else if (temporaryKey){                   // Если есть временный ключ - пропускаем этап его получения   
       showUserInfo(res);
   }
   else if (!temporaryKeyRequested) {  // Если временный ключ не запрошен - запрашиваем
@@ -147,7 +157,9 @@ function showUserInfo(res){
     temporaryKey = '';
     accessToken = '';
     console.log('err.message =' + err.message);
-    res.send('Key is expired. Try to reload page to reconnect.');
+    showButton = true;
+    info = 'Key is expired. Try push button to reconnect.'
+    res.redirect(urlCallback);
    });     
 }
 
