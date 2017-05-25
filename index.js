@@ -78,7 +78,6 @@ app.get('/', function(req, res){
   else{ 
     temporaryKeyRequested = false;  
     res.send('Не удалось получить временный ключ: ' + res.query[error] + ' ' + res.query[error_description]);  
-    // Если открыть страницу и быстро ее обновить - можно получить такое сообщение.
   }
 }).listen(port);
 console.log('Server started on port '+ port);
