@@ -8,7 +8,6 @@ const app = express();
 const axios = require('axios'); 
 const querystring = require('querystring');
 
-
 // настройки, полученные при регистрации приложения
 // ID приложения
 var appId = '6043692';
@@ -31,7 +30,6 @@ let accessToken = '';               // ключ (токен) доступа
 
 let groupId;                        // идентификатор группы
 let showButton = true;              // признак того, что нужно показывать кнопку на странице
-
 
 let resultString;                   // строка для хранения html
 let query;                          // строка для параметров url
