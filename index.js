@@ -36,7 +36,7 @@ let query;                          // строка для параметров 
 let info = '';                      // строка для сообщения, выводимого перед кнопкой
 
 app.get('/', function(req, res){
-  // Есди неободимо показать страницу с кнопкой  - показываем
+  // Есди необходимо показать страницу с кнопкой  - показываем
   if (showButton) {
     showButton = false;
     resultString = '<!DOCTYPE html><html><head><title>MyHomeWork</title></head>'+
