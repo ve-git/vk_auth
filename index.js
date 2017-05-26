@@ -1,26 +1,14 @@
 "use strict";
-// hwListOfMessages 
-// https://vk.com/editapp?id=6043692&section=options
 
 const express = require('express');
 const app = express();
-
 const axios = require('axios'); 
+let {cfgToString} = require('./cfg_axios'); 
+
 const querystring = require('querystring');
+const {APP_ID, SAFE_KEY, PORT, SITE} = require('./constants');
 
-// настройки, полученные при регистрации приложения
-// ID приложения
-var appId = '6043692';
-
-// Защищенный ключ доступа
-var safeKey = 'WjqsadfIolhKYd9zLz4g';  
-
-//Сервисный ключ доступа
-var serviceAccessKey = '8614e0c68614e0c68614e0c6ad8648d8ea886148614e0c6df371136f6d5d4995408feec';
-
-// настройки для сайта и порта
-let port = '3002';
-let urlCallback = 'http://localhost:'+port;
+var debug = require('debug')('vk_auth');
 
 // прочие переменные программы
 let temporaryKey = '';              // временный ключ
@@ -32,15 +20,16 @@ let groupId;                        // идентификатор группы
 let showButton = true;              // признак того, что нужно показывать кнопку на странице
 
 let resultString;                   // строка для хранения html
-let query;                          // строка для параметров url
 let info = '';                      // строка для сообщения, выводимого перед кнопкой
+let cfg = {};                       // конфигурация для axios
+
 
 app.get('/', function(req, res){
-  // Есди необходимо показать страницу с кнопкой  - показываем
+  // Если необходимо показать страницу с кнопкой  - показываем
   if (showButton) {
     showButton = false;
     resultString = '<!DOCTYPE html><html><head><title>MyHomeWork</title></head>'+
-      '<body><p>'+info+'<p><form action="'+urlCallback+'" method="get"><p><input type="submit" value ="Click me!">'+
+      '<body><p>'+info+'<p><form action="'+SITE+'" method="get"><p><input type="submit" value ="Click me!">'+
       '</p></form></body></html>';
     res.send(resultString);
   }
@@ -54,17 +43,22 @@ app.get('/', function(req, res){
   else if (!temporaryKeyRequested) {  
     temporaryKeyRequested = true;  
 
-    query = querystring.stringify({
-      client_id     : appId, 
-      display       : 'page', 
-      redirect_uri  : urlCallback, 
-      scope         : 'groups', 
-      response_type : 'code', 
-      v             : '5.64'
-    });
-    console.log('=== temporary key ===');
-    console.log('https://oauth.vk.com/authorize?'+query);
-    res.redirect('https://oauth.vk.com/authorize?'+query);
+    cfg = {
+      method: 'get',
+      url: 'https://oauth.vk.com/authorize',
+      params: {
+        client_id     : APP_ID, 
+        display       : 'page', 
+        redirect_uri  : SITE, 
+        scope         : 'groups', 
+        response_type : 'code', 
+        v             : '5.64'
+      }
+    };
+    debug('=== temporary key ===');
+    debug(cfgToString(cfg));
+    res.redirect(cfgToString(cfg));
+
   }
 
   // Если временный ключ запрошен и получен - читаем и запоминаем его, и идем дальше
@@ -79,9 +73,12 @@ app.get('/', function(req, res){
     temporaryKeyRequested = false;  
     res.send('Не удалось получить временный ключ: ' + res.query[error] + ' ' + res.query[error_description]);  
   }
-}).listen(port);
-console.log('Server started on port '+ port);
+}).listen(PORT);
+console.log('Server started on port '+ PORT);
 
+
+// Получаем информацию со страницы первой группы пользователя.
+// Если необходимо - сначала получаем ключ доступа.
 function showUserInfo(res){
   Promise.resolve(null)
 
@@ -90,16 +87,20 @@ function showUserInfo(res){
     if (accessToken) {
       return accessToken;
     }    
-    query = querystring.stringify({
-      client_id     : appId, 
-      client_secret : safeKey,
-      redirect_uri  : urlCallback, 
-      code          : temporaryKey
-    });
-    console.log('=== access token ===');
-    console.log('https://oauth.vk.com/access_token?'+query);
+    cfg = {
+      method: 'get',
+      url: 'https://oauth.vk.com/access_token',
+      params: {
+        client_id     : APP_ID, 
+        client_secret : SAFE_KEY,
+        redirect_uri  : SITE, 
+        code          : temporaryKey
+      }
+    };
+    debug('=== access token ===');
+    debug(cfgToString(cfg));
     return (
-      axios.get('https://oauth.vk.com/access_token?'+query)
+      axios(cfg)
       .then(function (response) {
         if (!response.data.access_token){  
           throw new Error('Access token is not received. '+response.data.error +' : '+ response.data.error_description);
@@ -112,10 +113,17 @@ function showUserInfo(res){
 
   // По полученному ключу пытаемся получить ИД первой из групп пользователя
   .then(x=>{
-    console.log('=== groups ====');        
-    query = querystring.stringify({access_token:accessToken, v:'5.64'});  
-    console.log('https://api.vk.com/method/groups.get?'+query);
-    return axios.post('https://api.vk.com/method/groups.get?'+query);
+    cfg = {
+      method: 'post',
+      url: 'https://api.vk.com/method/groups.get',
+      params: {
+        access_token: accessToken, 
+        v: '5.64'
+      }
+    }
+    debug('=== groups ====');        
+    debug(cfgToString(cfg));
+    return axios(cfg);
   })
 
   // По полученному ИД группы пытаемся получить список сообщений на стене группы
@@ -125,10 +133,18 @@ function showUserInfo(res){
     }
     if (response.data.response.count == 0){ throw new Error("Current user hasn't any groups. "); }
     groupId = response.data.response.items[0];
-    console.log('=== messages ====');        
-    query = querystring.stringify({owner_id:'-'+groupId, access_token:accessToken, v:'5.64'});  
-    console.log('https://api.vk.com/method/wall.get?'+query);
-    return axios.post('https://api.vk.com/method/wall.get?'+query);
+    cfg = {
+      method: 'post',
+      url: 'https://api.vk.com/method/wall.get',
+      params: {
+        owner_id: '-'+groupId, 
+        access_token: accessToken, 
+        v: '5.64'
+      }
+    }
+    debug('=== messages ====');        
+    debug(cfgToString(cfg));
+    return axios(cfg);
   })
 
   // Выводим тексты сообщений на страницу пользователя. И почему в Node нет JSX?!
@@ -152,7 +168,7 @@ function showUserInfo(res){
     console.log('err.message =' + err.message);
     showButton = true;
     info = 'Key is expired. Try to push the button to reconnect.'
-    res.redirect(urlCallback);
+    res.redirect(SITE);
    });     
 }
 

@@ -5,12 +5,13 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "set DEBUG=vk_auth && node index.js"
   },
   "author": "Vadim Emelyanov",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.16.1",
+    "debug": "^2.6.8",
     "express": "^4.15.3"
   }
 }
