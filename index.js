@@ -3,12 +3,12 @@
 const express = require('express');
 const app = express();
 const axios = require('axios'); 
-let {cfgToString} = require('./cfg_axios'); 
-
-const querystring = require('querystring');
+const {cfgToString} = require('./cfg_axios'); 
 const {APP_ID, SAFE_KEY, PORT, SITE} = require('./constants');
+const mustache = require('mustache');
+const fs = require('fs');
 
-var debug = require('debug')('vk_auth');
+let debug = require('debug')('vk_auth');
 
 // прочие переменные программы
 let temporaryKey = '';              // временный ключ
@@ -16,22 +16,25 @@ let temporaryKeyRequested = false;  // признак того, что ожид�
 
 let accessToken = '';               // ключ (токен) доступа
 
-let groupId;                        // идентификатор группы
 let showButton = true;              // признак того, что нужно показывать кнопку на странице
-
-let resultString;                   // строка для хранения html
 let info = '';                      // строка для сообщения, выводимого перед кнопкой
 let cfg = {};                       // конфигурация для axios
+let view = {};                      // объект для mustache
 
 
 app.get('/', function(req, res){
   // Если необходимо показать страницу с кнопкой  - показываем
   if (showButton) {
     showButton = false;
-    resultString = '<!DOCTYPE html><html><head><title>MyHomeWork</title></head>'+
-      '<body><p>'+info+'<p><form action="'+SITE+'" method="get"><p><input type="submit" value ="Click me!">'+
-      '</p></form></body></html>';
-    res.send(resultString);
+
+    fs.readFile('button_templ.html', 'utf8', function(err,data){
+      if (err){
+        throw new Error("File 'button_templ.html' not found. " + err.message);
+      }
+      else{
+        res.send(mustache.render(data, {info: info, site:SITE}));
+      }
+    });
   }
 
   // Если есть временный ключ - пропускаем этап его получения   
@@ -132,12 +135,13 @@ function showUserInfo(res){
       throw new Error('Данные не получены. '+response.data.error +' : '+ response.data.error_description);
     }
     if (response.data.response.count == 0){ throw new Error("Current user hasn't any groups. "); }
-    groupId = response.data.response.items[0];
+    view.groupId = response.data.response.items[0];
+    view.article = [];
     cfg = {
       method: 'post',
       url: 'https://api.vk.com/method/wall.get',
       params: {
-        owner_id: '-'+groupId, 
+        owner_id: '-'+view.groupId, 
         access_token: accessToken, 
         v: '5.64'
       }
@@ -147,17 +151,26 @@ function showUserInfo(res){
     return axios(cfg);
   })
 
-  // Выводим тексты сообщений на страницу пользователя. И почему в Node нет JSX?!
+  // Выводим тексты сообщений на страницу пользователя.
   .then(function (response) {
-    resultString = '<html><head><title>MyHomeWork</title></head><body bgcolor="white"><table border="1"><caption>Результаты</caption>'
     for(let i=0; i<5; i++){
       if (response.data.response.items[i].text === undefined) break;
-      //TODO разобраться, что пишется во from_id и в owner_id
-      resultString += '<tr><td><a href="https://vk.com/wall-'+groupId+'_'+response.data.response.items[i].id+'">&nbsp;'
-        +(i+1)+'&nbsp;</a></td><td>'+response.data.response.items[i].text+'</td></tr>';
+      view.article.push({ 
+        "number": (i+1), 
+        "response_id": response.data.response.items[i].id,  
+        "text": response.data.response.items[i].text
+      });
     }
-    resultString += '</table></body></html>';
-    res.send(resultString);
+    fs.readFile('template.html', 'utf8', function(err,data){
+      if (err){
+        throw new Error("File 'template.html' not found. " + err.message);
+        // после появления ошибки программа остановится, а не пойдет в .catch !
+        // Существует ли промис для чтения из файла?
+      }
+      else{
+        res.send(mustache.render(data, view));
+      }
+    });
   })
 
   // Советуем перезайти, так как, вероятно, устарел временный ключ. Если не поможет - 

@@ -12,6 +12,7 @@
   "dependencies": {
     "axios": "^0.16.1",
     "debug": "^2.6.8",
-    "express": "^4.15.3"
+    "express": "^4.15.3",
+    "mustache": "^2.3.0"
   }
 }
