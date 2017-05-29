@@ -1,5 +1,3 @@
-"use strict";
-
 const express = require('express');
 const app = express();
 const axios = require('axios'); 
@@ -76,8 +74,8 @@ app.get('/', function(req, res){
     temporaryKeyRequested = false;  
     res.send('Не удалось получить временный ключ: ' + res.query[error] + ' ' + res.query[error_description]);  
   }
-}).listen(PORT);
-console.log('Server started on port '+ PORT);
+}).listen(PORT, function(){ console.log('Server started on port '+ PORT);});
+
 
 
 // Получаем информацию со страницы первой группы пользователя.
