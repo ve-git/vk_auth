@@ -14,5 +14,10 @@
     "debug": "^2.6.8",
     "express": "^4.15.3",
     "mustache": "^2.3.0"
+  },
+  "devDependencies": {
+    "eslint": "^3.19.0",
+    "eslint-config-airbnb-base": "^11.2.0",
+    "eslint-plugin-import": "^2.2.0"
   }
 }
