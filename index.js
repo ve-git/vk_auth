@@ -5,10 +5,9 @@ const { cfgToString } = require('./cfg_axios');
 const { APP_ID, SAFE_KEY, PORT, SITE } = require('./constants');
 const mustache = require('mustache');
 const fs = require('fs');
-
 let debug = require('debug')('vk_auth');
 
-// прочие переменные программы
+// переменные программы
 let temporaryKey = '';              // временный ключ
 let temporaryKeyRequested = false;  // признак того, что ожидается получение временного ключа
 
@@ -39,8 +38,7 @@ function showUserInfo(res) {
         code: temporaryKey
       }
     };
-    debug('=== access token ===');
-    debug(cfgToString(cfg));
+    debug('=== access token ===\n' + cfgToString(cfg));
     return (
       axios(cfg)
       .then(function (response) {
@@ -63,8 +61,7 @@ function showUserInfo(res) {
         v: '5.64'
       }
     };
-    debug('=== groups ====');
-    debug(cfgToString(cfg));
+    debug('=== groups ==== \n' + cfgToString(cfg));
     return axios(cfg);
   })
 
@@ -85,19 +82,18 @@ function showUserInfo(res) {
         v: '5.64'
       }
     };
-    debug('=== messages ====');
-    debug(cfgToString(cfg));
+    debug('=== messages ====\n' + cfgToString(cfg));
     return axios(cfg);
   })
 
   // Выводим тексты сообщений на страницу пользователя.
   .then(function (response) {
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 5; i += 1) {
       if (response.data.response.items[i].text === undefined) break;
       view.article.push({
-        'number': (i + 1),
-        'response_id': response.data.response.items[i].id,
-        'text': response.data.response.items[i].text
+        number: (i + 1),
+        response_id: response.data.response.items[i].id,
+        text: response.data.response.items[i].text
       });
     }
     fs.readFile('template.html', 'utf8', function (err, data) {
@@ -158,8 +154,7 @@ function main() {
           v: '5.64'
         }
       };
-      debug('=== temporary key ===');
-      debug(cfgToString(cfg));
+      debug('=== temporary key ===\n' + cfgToString(cfg));
       res.redirect(cfgToString(cfg));
 
     // Если временный ключ запрошен и получен - читаем и запоминаем его, и идем дальше
@@ -178,3 +173,20 @@ function main() {
 
 
 main();
+
+/*
+  Результат последней проверки линтером (.\node_modules\.bin\eslint index.js):
+
+   44:13  warning  Unexpected unnamed function   func-names
+   69:9   warning  Unexpected unnamed function   func-names
+   90:9   warning  Unexpected unnamed function   func-names
+   99:42  warning  Unexpected unnamed function   func-names
+  112:10  warning  Unexpected unnamed function   func-names
+  115:5   warning  Unexpected console statement  no-console
+  124:16  warning  Unexpected unnamed function   func-names
+  129:48  warning  Unexpected unnamed function   func-names
+  171:19  warning  Unexpected unnamed function   func-names
+  171:33  warning  Unexpected console statement  no-console
+
+✖ 10 problems (0 errors, 10 warnings)
+*/
