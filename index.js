@@ -168,7 +168,11 @@ function main() {
       temporaryKeyRequested = false;
       res.send('Не удалось получить временный ключ: ' + res.query.error + ' ' + res.query.error_description);
     }
-  }).listen(PORT, function () { console.log('Server started on port ' + PORT); });
+  }).listen(PORT, function () {
+    /* eslint-disable no-console */
+    console.log('Server started on port ' + PORT);
+    /* eslint-enable no-console */
+  });
 }
 
 
@@ -186,7 +190,6 @@ main();
   124:16  warning  Unexpected unnamed function   func-names
   129:48  warning  Unexpected unnamed function   func-names
   171:19  warning  Unexpected unnamed function   func-names
-  171:33  warning  Unexpected console statement  no-console
 
-✖ 10 problems (0 errors, 10 warnings)
+✖ 9 problems (0 errors, 9 warnings)
 */
