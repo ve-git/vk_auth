@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "set DEBUG=vk_auth && node index.js"
+    "start0": "set DEBUG=vk_auth && node index.js",
+    "start": "set DEBUG=vk_auth && node bundle.js",
+    "lint": "eslint *.js",
+    "webpack": "webpack --progress"
   },
   "author": "Vadim Emelyanov",
   "license": "ISC",
@@ -16,8 +19,10 @@
     "mustache": "^2.3.0"
   },
   "devDependencies": {
+    "babel-loader": "^7.0.0",
     "eslint": "^3.19.0",
     "eslint-config-airbnb-base": "^11.2.0",
-    "eslint-plugin-import": "^2.2.0"
+    "eslint-plugin-import": "^2.2.0",
+    "webpack": "^2.6.1"
   }
 }

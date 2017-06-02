@@ -121,6 +121,12 @@ function showUserInfo(res) {
 
 
 function main() {
+  app.use(function (req, res, next) {
+    console.log('LOGGED');
+    next();
+  });
+
+
   app.get('/', function (req, res) {
   // Если необходимо показать страницу с кнопкой  - показываем
     if (showButton) {
