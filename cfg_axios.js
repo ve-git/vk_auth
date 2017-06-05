@@ -20,17 +20,6 @@ exports.cfgToString = function (cfg) {
     }
   });
 
-/*
-// Цикл for..in перечисляет свойства из цепочки прототипов и потому no restricted
-  for (let key in cfg.params) {
-    if (isFirst) {
-      result += key + '=' + cfg.params[key];
-      isFirst = false;
-    } else {
-      result += '&' + key + '=' + cfg.params[key];
-    }
-  }
-*/
   return result;
 };
 

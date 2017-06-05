@@ -7,22 +7,26 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start0": "set DEBUG=vk_auth && node index.js",
     "start": "set DEBUG=vk_auth && node bundle.js",
-    "lint": "eslint *.js",
+    "lint": "eslint index.js cfg_axios.js",
+    "lint-client": "eslint --no-eslintrc -c .eslintrc-client client.js",
     "webpack": "webpack --progress"
   },
   "author": "Vadim Emelyanov",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.16.1",
+    "axios": "^0.16.2",
     "debug": "^2.6.8",
-    "express": "^4.15.3",
-    "mustache": "^2.3.0"
+    "express": "^4.15.3"
   },
   "devDependencies": {
+    "babel-core": "^6.24.1",
     "babel-loader": "^7.0.0",
+    "babel-preset-es2015": "^6.24.1",
+    "css-loader": "^0.28.4",
     "eslint": "^3.19.0",
     "eslint-config-airbnb-base": "^11.2.0",
-    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-import": "^2.3.0",
+    "style-loader": "^0.18.2",
     "webpack": "^2.6.1"
   }
 }
